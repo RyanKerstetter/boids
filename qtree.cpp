@@ -7,7 +7,7 @@ using namespace std;
 #pragma once
 
 int max_values = 4;
-bool draw_lines = true;
+bool draw_lines = false;
 
 template <typename T>
 struct arr{
@@ -23,7 +23,7 @@ public:
     vectorizable(){
         id = id_counter++;
     }
-    virtual Vector2 get_position() = 0;
+    virtual Vector2& get_position() = 0;
     virtual void update() = 0;
     virtual void draw() = 0;
 };
@@ -87,7 +87,7 @@ public:
         return false;
     }
 
-    void propogate_up(T t){
+    void propogate_up(T& t){
         Vector2 p = t.get_position();
         if(!CheckCollisionPointRec(p,bounds)){
             if(parent == nullptr){
@@ -178,8 +178,9 @@ public:
     }
 
     void draw(){
-        if(draw_lines)
-            DrawRectangleLinesEx(bounds, 1, RED);
+        if(draw_lines){
+            DrawRectangleLinesEx(bounds,1,RED);
+        }
         if(children[0] == nullptr){
             for(int i = 0; i < objects.size(); i++){
                 objects[i].draw();
@@ -223,7 +224,7 @@ public:
         return array;
     }
 
-    void get_in_range(Vector2 p,float dist,vector<T>* accum){
+    void get_in_range(Vector2 p,float dist,vector<T*>* accum){
         if(!CheckCollisionCircleRec(p,dist,bounds)){
             return;
         }
@@ -235,7 +236,7 @@ public:
                 double off_y = o.y - p.y;
                 double sq = off_x * off_x + off_y * off_y;
                 if(sq < d){
-                    accum->push_back(objects[i]);
+                    accum->push_back(&objects[i]);
                 }
             }
             return; 
@@ -269,8 +270,8 @@ public:
         root->draw();
     }
 
-    vector<T> get_in_range(Vector2 p,float dist){
-        vector<T> accum;
+    vector<T*> get_in_range(Vector2 p,float dist){
+        vector<T*> accum;
         root->get_in_range(p,dist,&accum);
         return accum;
     }

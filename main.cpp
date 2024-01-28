@@ -34,27 +34,25 @@ int main(){
             b.velocity.x *= -1;
         if(rand() % 2 == 0)
             b.velocity.y *= -1;
-        b.color = { static_cast<unsigned char>(rand() % 255), static_cast<unsigned char>(rand() % 255), static_cast<unsigned char>(rand() % 255), 255 };
         t.add(b);
-        if(i == 90){
-            boid = &b;
-        }
     }
     
 
     SetTargetFPS(60);               
-
     // Main game loop
     while (!WindowShouldClose()){
         BeginDrawing();
         ClearBackground(RAYWHITE);
+
         t.draw();
-        int amount = t.get_amount();
         t.update();
+
+        int amount = t.get_amount();
         if(amount != t.get_amount()){
             cout << "amount changed from " << amount << " to " << t.get_amount() << endl;
             exit(1);
         }
+
         int get_fps = GetFPS();
         DrawText(TextFormat("fps: %i", get_fps), 10, 10, 20, BLACK);
         EndDrawing();

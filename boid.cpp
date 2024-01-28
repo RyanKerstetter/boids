@@ -27,21 +27,21 @@ public:
     static QuadTree<Boid>* tree;
     static int amount_updated;
     bool updated = false;
-    Color color = BLACK;
     Vector2 last_position;
     Vector2 position;
     Vector2 velocity;
     
-    Vector2 get_position() override{
+    Vector2& get_position() override{
         return position;
     }
 
     void update() override{
         amount_updated++;
         UpdatePositions();
-        seperation(*this, tree->get_in_range(position, avoid_radius));
-        align(*this, tree->get_in_range(position, match_radius));
-        center(*this, tree->get_in_range(position, center_radius));
+        seperation(tree->get_in_range(position, avoid_radius));
+        vector<Boid*> boids = tree->get_in_range(position, match_radius);
+        align(boids);
+        center(boids);
     }
 
     void UpdatePositions(){
@@ -60,49 +60,52 @@ public:
         position.y = fmod(position.y, 600);
     }
 
-    void seperation(Boid& b,vector<Boid> boids){
+    void seperation(vector<Boid*> boids){
         Vector2 steer = {0,0};
-        for(Boid& other : boids){
-            Vector2 diff = Vector2Subtract(b.position, other.position);
+        for(Boid* other : boids){
+            Vector2 diff = Vector2Subtract(position, other->position);
             diff = Vector2Scale(Vector2Normalize(diff),avoid_radius);
             steer = Vector2Add(steer, diff);
         }
-        b.velocity = Vector2Add(b.velocity, Vector2Scale(steer, avoid_factor));
+        velocity.x += steer.x * avoid_factor;
+        velocity.y += steer.y * avoid_factor;
     }
 
-    void align(Boid& b,vector<Boid> boids){
+    void align(vector<Boid*> boids){
         Vector2 sum = {0,0};
         int count = 0;
-        for(Boid& other : boids){
-            sum = Vector2Add(sum, other.velocity);
+        for(Boid* other : boids){
+            sum.x += other->velocity.x;
+            sum.y += other->velocity.y;
             count++;
         }
         if(count > 0){
-            sum = Vector2Scale(sum, 1.0f / count);
-            Vector2 diff = Vector2Subtract(sum, b.velocity);
-            b.velocity = Vector2Add(b.velocity, Vector2Scale(diff, match_factor));
+            sum.x = sum.x / count - velocity.x;
+            sum.y = sum.y / count - velocity.y;
+            velocity.x += sum.x * match_factor;
+            velocity.y += sum.y * match_factor;
         }
     }
 
-    void center(Boid& b,vector<Boid> boids){
+    void center(vector<Boid*> boids){
         Vector2 sum = {0,0};
         int count = 0;
-        for(Boid& other : boids){
-            sum = Vector2Add(sum, other.position);
+        for(Boid* other : boids){
+            sum.x += other->position.x;
+            sum.y += other->position.y;
             count++;
         }
         if(count > 0){
-            sum = Vector2Scale(sum, 1.0f / count);
-            Vector2 diff = Vector2Subtract(sum, b.position);
-            b.velocity = Vector2Add(b.velocity, Vector2Scale(diff, center_factor));
+            sum.x = sum.x / count - position.x;
+            sum.y = sum.y / count - position.y;
+            velocity.x += sum.x * center_factor;
+            velocity.y += sum.y * center_factor;
         }
     }
 
     void draw() override{
         amount_updated++;
-        //cout << "position: " << position.x << ", " << position.y << endl;
-        //cout << "velocity: " << velocity.x << ", " << velocity.y << endl;
-        DrawCircle(position.x, position.y, 1, BLACK);
+        DrawRectangle(position.x, position.y, 1, 1, BLACK);
     }
 };
 
